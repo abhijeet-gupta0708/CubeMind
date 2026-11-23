@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.coverage
+
+# Solver cache: generated locally with `python -m app.precompute`.
+# On Render, either precompute at start or mount a persistent disk at
+# KOCIEMBA_TABLES_PATH (see README).
+backend/.cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+*.local
+
+# Environment
+.env
+.env.*.local
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

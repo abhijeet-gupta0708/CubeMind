@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: cubemind-api
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHONPATH
+        value: .
+      - key: CORS_ORIGINS
+        sync: false
+      - key: KOCIEMBA_TABLES_PATH
+        value: /tmp/kociemba_tables.pkl
+      - key: LOG_LEVEL
+        value: info
+      - key: SOLVER_TIME_LIMIT
+        value: 20
+      - key: SOLVER_NODE_LIMIT
+        value: 4000000
+      - key: MAX_IMAGE_BYTES
+        value: 8388608
+
+# Notes:
+# - CORS_ORIGINS must list the exact Vercel frontend origin(s), comma separated.
+# - Render's ephemeral filesystem does not carry build artifacts into the
+#   runtime, so the app generates its ~6.7 MB Kociemba table cache on first
+#   boot in a background thread (~30 s). /health answers immediately; the
+#   first /solve waits for the tables and is slower on a cold start.
+# - For faster cold starts, attach a Render persistent disk and point
+#   KOCIEMBA_TABLES_PATH at a file on that disk; subsequent deploys reuse it.
+#   You can also pre-generate the file with `python -m app.precompute`.
