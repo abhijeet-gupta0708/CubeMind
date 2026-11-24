@@ -175,15 +175,11 @@ export default function LearnPage() {
     <div className="page-shell pb-16 pt-8 sm:pt-10">
       <header className="grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
         <div>
-          <div className="eyebrow">Learn</div>
-          <h1 className="display-title mt-3">
-            Understand the cube,
-            <br />
-            <span className="gradient-text">not just the solution.</span>
-          </h1>
+          <div className="eyebrow">Notation lab</div>
+          <h1 className="display-title mt-3">Learn the moves. Own the solve.</h1>
           <p className="lead mt-4 max-w-xl">
-            Notation is the language of every algorithm. Once you can read a sequence, the solver
-            stops being a black box and starts being a teacher.
+            Every algorithm is a sentence written in face turns. Learn the vocabulary here, then
+            read any solution in the studio without guessing.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {palette.map(({ label, icon: Icon }) => (
@@ -320,10 +316,10 @@ export default function LearnPage() {
               <p className="mt-2 text-xs leading-relaxed text-muted">{step.detail}</p>
               {"algorithm" in step && step.algorithm ? (
                 <div className="mt-3 rounded-lg border border-white/[0.07] bg-black/20 px-2.5 py-2">
-                  <div className="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-dim">
+                  <div className="meta-label">
                     Algorithm
                   </div>
-                  <div className="mono mt-1 text-[0.72rem] leading-relaxed text-[#cfd4e0]">
+                  <div className="mono mt-1 text-[0.72rem] leading-relaxed text-muted">
                     {step.algorithm}
                   </div>
                 </div>

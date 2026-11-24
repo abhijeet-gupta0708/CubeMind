@@ -20,6 +20,7 @@ is replay-verified against the submitted cube before it is returned.
 - [Quick start](#quick-start)
 - [Using the app](#using-the-app)
 - [Architecture](#architecture)
+- [Design system](#design-system)
 - [API](#api)
 - [Configuration](#configuration)
 - [Tests and checks](#tests-and-checks)
@@ -127,6 +128,38 @@ The frontend keeps 26 cubies with exact integer rotation matrices, derives
 facelets on demand and normalises local state before API calls. The backend is
 authoritative: it validates cubie parity/orientation, solves, and replays the
 solution to confirm it reaches the solved state.
+
+---
+
+## Design system
+
+The interface is a flat “cube workbench”: deep green-black surfaces in the dark
+theme, a pale paper studio in the light theme, and the cube's own six-colour
+ribbon as the only decorative motif. One token set in
+`frontend/src/styles.css` covers surfaces, line work, text, accent yellow,
+blue/green information colours and semantic status colours. Bricolage Grotesque
+sets display type, IBM Plex Sans sets UI copy and JetBrains Mono is reserved for
+notation, timings and counts. Lucide icons complete the system. Use the sun/moon
+button in the header to switch themes; the choice is saved locally. Keep new UI
+in this token system rather than adding one-off styles.
+
+On desktop the solver places the live cube and its verified playback panel side
+by side. Once a solution passes the server's replay check, playback starts
+automatically so the cube visibly turns through the solution; Play/Pause, step
+and restart controls remain available in the right-hand panel.
+
+Educational turns first ease the camera toward the face or slice that will
+move, highlight that layer and name the turn on the stage, then animate the
+layer itself. Scrambles stay fast and skip this focus phase; reduced motion
+skips both camera travel and the layer animation.
+
+The screens were redesigned with the Anthropic `frontend-design` skill and
+retain the accessibility, layout, motion, typography, colour and copy baseline
+from the `better-*` and `ui-ux-pro-max` skills installed in `.opencode/skills`
+and `.agents/skills` at the repository root. That baseline includes keyboard
+parity for the 3D stage, modal focus containment, reduced-motion handling, 44px
+targets, stable live regions and verification feedback. Preserve these when
+extending the UI.
 
 ---
 
@@ -292,5 +325,3 @@ origin, avoiding CORS entirely.
   cube rotations internally.
 - No accounts, persistence or telemetry. Everything runs in the browser and
   in the API process.
-#   C u b e M i n d  
- 

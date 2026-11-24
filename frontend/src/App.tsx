@@ -1,6 +1,9 @@
-import { Component, lazy, Suspense, useEffect, type ReactNode } from "react";
+import { Component, lazy, Suspense, useEffect, useRef, type ReactNode } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { MotionConfig } from "framer-motion";
 import { ArrowLeft, RefreshCw } from "lucide-react";
+import { scrollBehavior } from "./lib/motion";
+import { ThemeProvider } from "./lib/theme";
 import { Shell } from "./components/Shell";
 import { ToastProvider } from "./components/Toaster";
 import { Button } from "./components/ui";
@@ -11,7 +14,7 @@ const AlgorithmsPage = lazy(() => import("./pages/AlgorithmsPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 
 const TITLES: Record<string, string> = {
-  "/": "CubeMind — Solve smarter. Move faster.",
+  "/": "CubeMind — Verified 3D cube solver",
   "/learn": "Learn cube notation — CubeMind",
   "/algorithms": "Algorithm library — CubeMind",
   "/about": "About CubeMind — A real two-phase cube solver",
@@ -19,13 +22,19 @@ const TITLES: Record<string, string> = {
 
 function ScrollAndTitle() {
   const location = useLocation();
+  const initialPath = useRef(location.pathname);
+
+  useEffect(() => {
+    if (initialPath.current === location.pathname) return;
+    document.getElementById("main-content")?.focus();
+  }, [location.pathname]);
 
   useEffect(() => {
     document.title = TITLES[location.pathname] ?? "CubeMind — Cube studio";
     if (location.hash) {
       const id = decodeURIComponent(location.hash.slice(1));
       const timer = window.setTimeout(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.getElementById(id)?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
       }, 60);
       return () => window.clearTimeout(timer);
     }
@@ -53,7 +62,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
         <div className="app-bg flex min-h-screen items-center justify-center px-4">
           <div className="surface max-w-md p-7 text-center">
             <h1 className="text-xl font-semibold tracking-tight text-white">
-              Something went wrong
+              Cube workspace failed
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-muted">
               The cube workspace hit an unexpected error. Reloading usually clears it; your current
@@ -81,9 +90,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
 function NotFound() {
   return (
     <div className="page-shell flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
-      <div className="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-violet-300">
-        404 · page not found
-      </div>
+      <div className="eyebrow">404 · page not found</div>
       <h1 className="display-title mt-3">This route doesn&apos;t exist.</h1>
       <p className="lead mt-3 max-w-md">
         The cube is still solvable. Head back to the studio and pick up where you left off.
@@ -98,31 +105,33 @@ function NotFound() {
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <ToastProvider>
-        <CubeWorkspaceProvider>
-          <ScrollAndTitle />
-          <Shell>
-            <Suspense
-              fallback={
-                <div className="page-shell flex min-h-[50vh] items-center justify-center">
-                  <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted">
-                    Loading…
-                  </p>
-                </div>
-              }
-            >
-              <Routes>
-                <Route path="/" element={<SolverPage />} />
-                <Route path="/learn" element={<LearnPage />} />
-                <Route path="/algorithms" element={<AlgorithmsPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </Shell>
-        </CubeWorkspaceProvider>
-      </ToastProvider>
-    </ErrorBoundary>
+    <ThemeProvider>
+      <ErrorBoundary>
+        <MotionConfig reducedMotion="user">
+          <ToastProvider>
+            <CubeWorkspaceProvider>
+              <ScrollAndTitle />
+              <Shell>
+                <Suspense
+                  fallback={
+                    <div className="page-shell flex min-h-[50vh] items-center justify-center">
+                      <p className="meta-label">Loading the workbench…</p>
+                    </div>
+                  }
+                >
+                  <Routes>
+                    <Route path="/" element={<SolverPage />} />
+                    <Route path="/learn" element={<LearnPage />} />
+                    <Route path="/algorithms" element={<AlgorithmsPage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </Shell>
+            </CubeWorkspaceProvider>
+          </ToastProvider>
+        </MotionConfig>
+      </ErrorBoundary>
+    </ThemeProvider>
   );
 }

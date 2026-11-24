@@ -12,6 +12,7 @@ import { validateFacelets } from "../lib/cube/facelets";
 import { isFaceletsSolved } from "../lib/cube/cubie";
 import { copyText } from "../lib/clipboard";
 import { formatSeconds } from "../lib/format";
+import { scrollBehavior } from "../lib/motion";
 import type { ApiStatus } from "../hooks/useApiHealth";
 import type { HealthResponse } from "../lib/api";
 import { useCubeWorkspace } from "../workspace/CubeWorkspace";
@@ -70,7 +71,10 @@ export function SolveCard({
       push("Cube state copied as 54 facelets.", "success", "Copied");
       onCopyState?.();
     } else {
-      push("The clipboard is not available in this browser.", "error");
+      push(
+        "Unable to copy. Select the text and copy it manually, or allow clipboard access in your browser.",
+        "error",
+      );
     }
   };
 
@@ -115,7 +119,7 @@ export function SolveCard({
                   : "Solver API online"}
             </span>
           </div>
-          <Badge tone={offline ? "danger" : "success"}>
+          <Badge tone={offline ? "danger" : checking ? "warning" : "success"}>
             {offline ? "Offline" : checking ? "Checking" : `v${health?.version ?? "1.0.0"}`}
           </Badge>
         </div>
@@ -199,7 +203,7 @@ export function SolveCard({
             </div>
             <button
               type="button"
-              className="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-muted-dim transition-colors hover:bg-white/5 hover:text-white"
+              className="flex h-11 w-11 flex-none items-center justify-center rounded-lg text-muted-dim transition-colors hover:bg-white/5 hover:text-white"
               aria-label="Copy cube state"
               title="Copy 54-character state"
               onClick={handleCopy}
@@ -259,7 +263,7 @@ export function SolveCard({
         {solution ? (
           <div className="rounded-xl border border-violet-400/20 bg-violet-500/[0.07] p-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-violet-200/80">
+              <span className="meta-label">
                 Last solve
               </span>
               <Badge tone="violet">{solution.moves.length} moves</Badge>
@@ -276,11 +280,11 @@ export function SolveCard({
             </div>
             <button
               type="button"
-              className="link-btn mt-1 !min-h-9 !text-xs"
+              className="link-btn mt-1 !min-h-11 !text-xs"
               onClick={() =>
                 document
                   .getElementById("solution-panel")
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  ?.scrollIntoView({ behavior: scrollBehavior(), block: "start" })
               }
             >
               Jump to playback

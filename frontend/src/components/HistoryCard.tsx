@@ -78,7 +78,7 @@ export function HistoryCard() {
                   <span className="history-move">{entry.label}</span>
                   <span
                     className={cn(
-                      "font-mono text-[0.6rem] uppercase tracking-[0.08em]",
+                      "meta-label",
                       SOURCE_TONE[entry.source],
                     )}
                   >

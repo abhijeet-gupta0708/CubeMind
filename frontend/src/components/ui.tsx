@@ -110,13 +110,12 @@ export function Segmented<T extends string>({
   className?: string;
 }) {
   return (
-    <div className={cn("segmented", className)} role="tablist" aria-label={label}>
+    <div className={cn("segmented", className)} role="group" aria-label={label}>
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
-          role="tab"
-          aria-selected={option.value === value}
+          aria-pressed={option.value === value}
           className="segmented__item"
           onClick={() => onChange(option.value)}
         >
@@ -220,25 +219,21 @@ export function Callout({
   children: ReactNode;
   className?: string;
 }) {
-  const toneClass = {
-    info: "border-cyan/25 bg-cyan/5 text-cyan-300",
-    warning: "border-amber-400/25 bg-amber-400/5 text-amber-200",
-    danger: "border-red-400/30 bg-red-400/5 text-red-200",
-    success: "border-emerald-400/25 bg-emerald-400/5 text-emerald-200",
-  }[tone];
-
   return (
-    <div className={cn("rounded-xl border p-3.5 text-sm leading-relaxed", toneClass, className)}>
+    <div className={cn("callout", `callout--${tone}`, className)}>
       <div className="flex items-start gap-2.5">
         {icon ? <span className="mt-0.5 flex-none">{icon}</span> : null}
         <div className="min-w-0">
-          {title ? <div className="mb-0.5 font-semibold text-current">{title}</div> : null}
-          <div className="text-[0.83rem] leading-relaxed opacity-90">{children}</div>
+          {title ? <div className="callout__title">{title}</div> : null}
+          <div className="callout__body">{children}</div>
         </div>
       </div>
     </div>
   );
 }
+
+const MODAL_FOCUSABLE =
+  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
 export function Modal({
   open,
@@ -266,9 +261,13 @@ export function Modal({
     if (!open) return;
     const previousActive = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
+    const appRoot = document.getElementById("root");
+    const previousInert = appRoot?.inert ?? false;
     document.body.style.overflow = "hidden";
+    if (appRoot) appRoot.inert = true;
     const focusTimer = window.setTimeout(() => {
-      panelRef.current?.focus();
+      const first = panelRef.current?.querySelector<HTMLElement>(MODAL_FOCUSABLE);
+      (first ?? panelRef.current)?.focus();
     }, 20);
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -278,9 +277,7 @@ export function Modal({
         return;
       }
       if (event.key !== "Tab" || !panelRef.current) return;
-      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
-      );
+      const focusable = panelRef.current.querySelectorAll<HTMLElement>(MODAL_FOCUSABLE);
       if (focusable.length === 0) {
         event.preventDefault();
         panelRef.current.focus();
@@ -288,7 +285,10 @@ export function Modal({
       }
       const first = focusable[0]!;
       const last = focusable[focusable.length - 1]!;
-      if (event.shiftKey && document.activeElement === first) {
+      if (
+        event.shiftKey &&
+        (document.activeElement === first || document.activeElement === panelRef.current)
+      ) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -301,6 +301,7 @@ export function Modal({
     return () => {
       document.removeEventListener("keydown", handleKeyDown, true);
       document.body.style.overflow = previousOverflow;
+      if (appRoot) appRoot.inert = previousInert;
       window.clearTimeout(focusTimer);
       previousActive?.focus();
     };

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { moveLabel } from "../lib/cube/moves";
 import { formatDuration, formatSeconds } from "../lib/format";
+import { scrollBehavior } from "../lib/motion";
 import { useCubeWorkspace } from "../workspace/CubeWorkspace";
 import { Badge, Button, Callout, Spinner, cn } from "./ui";
 
@@ -37,7 +38,7 @@ export function SolutionPanel({
   useEffect(() => {
     if (!solution) return;
     currentRef.current?.scrollIntoView({
-      behavior: "smooth",
+      behavior: scrollBehavior(),
       block: "nearest",
       inline: "center",
     });
@@ -45,7 +46,7 @@ export function SolutionPanel({
 
   if (!solution) {
     return (
-      <section className="surface" id="solution-panel" aria-labelledby="solution-title">
+      <section className="surface solution-rail" id="solution-panel" aria-labelledby="solution-title">
         <div className="panel-header">
           <h2 className="panel-title" id="solution-title">
             <ListOrdered className="h-4 w-4 text-violet-300" />
@@ -54,15 +55,15 @@ export function SolutionPanel({
           <Badge>Not loaded</Badge>
         </div>
         <div className="panel-body">
-          <div className="surface-dashed flex flex-col items-center gap-3 px-5 py-8 text-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-400/25 bg-violet-500/10">
-              <Wand2 className="h-5 w-5 text-violet-300" />
+          <div className="rail-empty px-5 py-8">
+            <div className="rail-empty__glyph">
+              <Wand2 className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">No solution loaded yet</p>
+              <p className="text-sm font-semibold">No solution loaded yet</p>
               <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-muted">
-                Scramble the cube or paint a state, then run the solver. Each move is highlighted,
-                animated and checked by replaying the full sequence before it is shown.
+                Scramble or paint the cube, then solve. The verified sequence starts playing
+                automatically — pause it or step through whenever you like.
               </p>
             </div>
             <Button variant="primary" onClick={onSolve} disabled={solving || solveDisabled}>
@@ -88,7 +89,7 @@ export function SolutionPanel({
   const canNext = !completed && index < total && !busy && !playing;
 
   return (
-    <section className="surface" id="solution-panel" aria-labelledby="solution-title">
+    <section className="surface solution-rail" id="solution-panel" aria-labelledby="solution-title">
       <div className="panel-header">
         <div>
           <h2 className="panel-title" id="solution-title">
@@ -98,7 +99,7 @@ export function SolutionPanel({
           <p className="mt-1 text-[0.72rem] text-muted">
             {completed
               ? "All moves applied and the solved state confirmed."
-              : "Every move is a quarter turn on the live cube — nothing is faked."}
+              : "Live quarter turns on the cube — nothing is faked."}
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-1.5">
@@ -110,9 +111,16 @@ export function SolutionPanel({
       </div>
 
       <div className="panel-body space-y-4">
+        <div className="sr-only" role="status">
+          {completed
+            ? "Cube solved successfully"
+            : total === 0
+              ? "No moves needed"
+              : `Move ${index + 1} of ${total}: ${nextLabel}`}
+        </div>
         <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)]">
           <div className="current-move">
-            <div className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-violet-200/80">
+            <div className="meta-label">
               {completed ? "Complete" : "Up next"}
             </div>
             <div className="current-move__label">{completed ? "✓" : nextLabel}</div>
@@ -124,7 +132,7 @@ export function SolutionPanel({
           <div className="min-w-0 space-y-3">
             <div className="flex items-end justify-between gap-3">
               <div>
-                <div className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-dim">
+                <div className="meta-label">
                   Progress
                 </div>
                 <div className="mt-1 text-lg font-semibold tracking-tight text-white">
@@ -193,7 +201,7 @@ export function SolutionPanel({
               </Button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.64rem] uppercase tracking-[0.08em] text-muted-dim">
+            <div className="meta-label flex flex-wrap items-center gap-x-4 gap-y-1">
               <span>{total} moves</span>
               <span>API {formatSeconds(solution.apiElapsedMs)}</span>
               <span>{solution.apiNodes.toLocaleString()} nodes</span>
@@ -204,7 +212,7 @@ export function SolutionPanel({
 
         <div className="surface-soft p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-dim">
+            <span className="meta-label">
               Move timeline
             </span>
             <span className="text-[0.7rem] text-muted">

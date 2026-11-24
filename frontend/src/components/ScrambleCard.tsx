@@ -27,7 +27,11 @@ export function ScrambleCard({
     if (!notation) return;
     const copied = await copyText(notation);
     if (copied) push("Scramble notation copied.", "success");
-    else push("The clipboard is not available in this browser.", "error");
+    else
+      push(
+        "Unable to copy. Select the text and copy it manually, or allow clipboard access in your browser.",
+        "error",
+      );
   };
 
   return (
@@ -55,7 +59,7 @@ export function ScrambleCard({
               disabled={disabled || generating}
             >
               <span>{option.label}</span>
-              <span className="font-mono text-[0.62rem] opacity-60">{option.length}</span>
+              <span className="mono text-[0.62rem]">{option.length}</span>
             </button>
           ))}
         </div>
@@ -72,12 +76,12 @@ export function ScrambleCard({
 
         <div>
           <div className="mb-1.5 flex items-center justify-between gap-2">
-            <span className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-dim">
+            <span className="meta-label">
               Notation
             </span>
             <button
               type="button"
-              className="flex min-h-9 items-center gap-1.5 rounded-md px-2 text-[0.68rem] font-medium text-muted transition-colors hover:bg-white/5 hover:text-white disabled:opacity-40"
+              className="flex min-h-11 items-center gap-1.5 rounded-md px-2 text-[0.68rem] font-medium text-muted transition-colors hover:bg-white/5 hover:text-white disabled:opacity-40"
               onClick={handleCopy}
               disabled={!notation}
             >
@@ -87,7 +91,7 @@ export function ScrambleCard({
           </div>
           <div className="min-h-[4.25rem] rounded-xl border border-white/[0.06] bg-black/20 p-2.5">
             {notation ? (
-              <p className="mono text-[0.78rem] leading-relaxed text-[#cfd4e0]">{notation}</p>
+              <p className="mono text-[0.78rem] leading-relaxed text-muted">{notation}</p>
             ) : (
               <p className="text-[0.72rem] leading-relaxed text-muted-dim">
                 Generate a scramble to see the notation and apply it to the cube.

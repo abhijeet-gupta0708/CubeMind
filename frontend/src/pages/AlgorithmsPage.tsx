@@ -90,21 +90,23 @@ export default function AlgorithmsPage() {
   const copyAlgorithm = async (algorithm: CubeAlgorithm) => {
     const copied = await copyText(algorithm.notation);
     if (copied) push(`${algorithm.name} notation copied.`, "success");
-    else push("The clipboard is not available in this browser.", "error");
+    else
+      push(
+        "Unable to copy. Select the text and copy it manually, or allow clipboard access in your browser.",
+        "error",
+      );
   };
 
   return (
     <div className="page-shell pb-16 pt-8 sm:pt-10">
       <header>
-        <div className="eyebrow">Algorithms</div>
+        <div className="eyebrow">Algorithm index</div>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="display-title">
-              The library, <span className="gradient-text">move by move.</span>
-            </h1>
+            <h1 className="display-title">A library you can actually play.</h1>
             <p className="lead mt-3 max-w-2xl">
-              Triggers, last-layer cases and a few patterns worth knowing. Load any algorithm onto a
-              practice cube and watch the exact notation play out.
+              Triggers, last-layer cases and useful patterns. Load any sequence onto the practice
+              cube and watch the exact notation turn it.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -178,7 +180,7 @@ export default function AlgorithmsPage() {
               </div>
               <button
                 type="button"
-                className="link-btn mt-1 !min-h-9 !text-[0.7rem]"
+                className="link-btn mt-1 !min-h-11 !text-[0.7rem]"
                 onClick={() => void copyAlgorithm(selected)}
               >
                 <Copy className="h-3 w-3" />
@@ -212,7 +214,7 @@ export default function AlgorithmsPage() {
                     onClick={() => setFilter(category.id)}
                   >
                     {category.label}
-                    <span className="font-mono text-[0.62rem] opacity-55">
+                    <span className="mono text-[0.62rem]">
                       {counts.get(category.id) ?? 0}
                     </span>
                   </button>
@@ -241,7 +243,11 @@ export default function AlgorithmsPage() {
             {filtered.length === 0 ? (
               <div className="empty-state py-12">
                 <Search className="h-6 w-6 opacity-40" />
-                <p className="font-medium text-white">No algorithms match.</p>
+                <p className="font-medium text-white">
+                  {query
+                    ? `No algorithms match “${query}” in ${activeCategory?.label ?? "All"}.`
+                    : `No algorithms in ${activeCategory?.label ?? "All"} match the current filters.`}
+                </p>
                 <p>Try another search term or clear the category filter.</p>
                 <Button
                   variant="secondary"
@@ -270,7 +276,7 @@ export default function AlgorithmsPage() {
                           <h2 className="truncate text-sm font-semibold text-white">
                             {algorithm.name}
                           </h2>
-                          <p className="mt-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted-dim">
+                          <p className="meta-label mt-0.5">
                             {algorithm.category}
                           </p>
                         </div>
@@ -297,7 +303,7 @@ export default function AlgorithmsPage() {
                           aria-pressed={isSelected}
                         >
                           <Play className="h-3.5 w-3.5" />
-                          {isSelected ? "Replay demo" : "Demo"}
+                          {isSelected ? "Replay demo" : "Play demo"}
                         </Button>
                         <button
                           type="button"

@@ -16,9 +16,9 @@ export function TimerCard() {
           <Timer className="h-4 w-4 text-cyan-300" />
           Session timer
         </h2>
-        <Badge tone={running ? "warning" : "default"}>
+        <Badge tone={running ? "cyan" : "default"}>
           <span
-            className={running ? "status-dot status-dot--ok pulse-glow" : "status-dot"}
+            className={running ? "status-dot status-dot--info animate-pulse" : "status-dot"}
             aria-hidden="true"
           />
           {running ? "Running" : "Stopped"}
@@ -32,7 +32,7 @@ export function TimerCard() {
           aria-label={`Elapsed time ${formatDuration(elapsedMs)}`}
         >
           <div className="timer-digits">{formatDuration(elapsedMs)}</div>
-          <div className="mt-1.5 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-dim">
+          <div className="meta-label mt-1.5">
             {running ? "timing" : "elapsed"}
           </div>
         </div>
@@ -58,13 +58,13 @@ export function TimerCard() {
 
         <div className="grid grid-cols-3 gap-2">
           <div className="surface-soft px-2.5 py-2">
-            <div className="font-mono text-[0.56rem] uppercase tracking-[0.1em] text-muted-dim">
+            <div className="meta-label">
               Moves
             </div>
             <div className="mono mt-0.5 text-base">{moveCount}</div>
           </div>
           <div className="surface-soft px-2.5 py-2">
-            <div className="font-mono text-[0.56rem] uppercase tracking-[0.1em] text-muted-dim">
+            <div className="meta-label">
               TPS
             </div>
             <div className="mono mt-0.5 text-base">
@@ -72,7 +72,7 @@ export function TimerCard() {
             </div>
           </div>
           <div className="surface-soft px-2.5 py-2">
-            <div className="font-mono text-[0.56rem] uppercase tracking-[0.1em] text-muted-dim">
+            <div className="meta-label">
               Last
             </div>
             <div className="mono mt-0.5 text-base">

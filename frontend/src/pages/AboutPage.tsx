@@ -87,15 +87,11 @@ export default function AboutPage() {
     <div className="page-shell pb-16 pt-8 sm:pt-10">
       <header className="grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
         <div>
-          <div className="eyebrow">About CubeMind</div>
-          <h1 className="display-title mt-3">
-            Built like a tool,
-            <br />
-            <span className="gradient-text">not a toy.</span>
-          </h1>
+          <div className="eyebrow">Under the hood</div>
+          <h1 className="display-title mt-3">A solver you can inspect.</h1>
           <p className="lead mt-4 max-w-xl">
-            CubeMind is a demonstration of what a focused cube studio can be: a real solver, an
-            honest 3D model, a readable editor and a camera path that tells you when it is unsure.
+            CubeMind pairs a genuine two-phase search with an honest 3D model, a sticker editor and
+            a camera path that says when it is unsure. Nothing is hidden behind a canned answer.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Link to="/" className="btn btn-primary">
@@ -264,7 +260,7 @@ export default function AboutPage() {
                   </span>
                   <h3 className="text-sm font-semibold text-white">{title}</h3>
                 </div>
-                <span className="font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted-dim">
+                <span className="meta-label">
                   {detail}
                 </span>
               </div>
@@ -371,7 +367,7 @@ export default function AboutPage() {
               <Server className="h-4 w-4 text-cyan-300" />
               <h3 className="text-sm font-semibold text-white">Backend</h3>
             </div>
-            <pre className="mt-3 overflow-x-auto rounded-lg border border-white/[0.07] bg-black/25 p-3 font-mono text-[0.7rem] leading-relaxed text-[#cfd4e0]">
+            <pre className="mt-3 overflow-x-auto rounded-lg border border-white/[0.07] bg-black/25 p-3 font-mono text-[0.7rem] leading-relaxed text-muted">
               {`cd backend
 python -m venv .venv
 .venv\\Scripts\\activate
@@ -388,7 +384,7 @@ python -m uvicorn app.main:app --port 8000`}
               <Code2 className="h-4 w-4 text-violet-300" />
               <h3 className="text-sm font-semibold text-white">Frontend</h3>
             </div>
-            <pre className="mt-3 overflow-x-auto rounded-lg border border-white/[0.07] bg-black/25 p-3 font-mono text-[0.7rem] leading-relaxed text-[#cfd4e0]">
+            <pre className="mt-3 overflow-x-auto rounded-lg border border-white/[0.07] bg-black/25 p-3 font-mono text-[0.7rem] leading-relaxed text-muted">
               {`cd frontend
 npm install
 npm run dev

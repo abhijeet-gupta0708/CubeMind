@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
@@ -10,6 +16,8 @@ import {
   Crosshair,
   Grid3x3,
   Keyboard,
+  Minus,
+  Plus,
   RotateCcw,
   RotateCw,
   ScanLine,
@@ -23,15 +31,16 @@ import {
 import { ApiError, api } from "../lib/api";
 import { isFaceletsSolved } from "../lib/cube/cubie";
 import { FACE_INDEX, validateFacelets } from "../lib/cube/facelets";
-import { parseMove } from "../lib/cube/moves";
+import { moveLabel, parseMove } from "../lib/cube/moves";
 import { generateScramble, SCRAMBLE_PRESETS, type ScramblePresetId } from "../lib/cube/scramble";
 import type { Face, Move, MoveAmount, MoveFace, StickerColor } from "../lib/cube/types";
 import { formatDuration, formatSeconds } from "../lib/format";
+import { useTheme } from "../lib/theme";
 import { KEYBOARD_SHORTCUTS } from "../data/shortcuts";
 import { useApiHealth } from "../hooks/useApiHealth";
 import { useCubeWorkspace } from "../workspace/CubeWorkspace";
 import { Celebration } from "../components/Celebration";
-import { CubeCanvas } from "../components/CubeCanvas";
+import { CubeCanvas, FACE_NAMES, type ViewCommand } from "../components/CubeCanvas";
 import { EditorPanel } from "../components/EditorPanel";
 import { FaceControls } from "../components/FaceControls";
 import { HistoryCard } from "../components/HistoryCard";
@@ -41,7 +50,7 @@ import { SolutionPanel } from "../components/SolutionPanel";
 import { SolveCard, type SolveFailure } from "../components/SolveCard";
 import { TimerCard } from "../components/TimerCard";
 import { useToast } from "../components/Toaster";
-import { Badge, Button, Modal, Segmented, cn } from "../components/ui";
+import { Badge, Button, Modal, Segmented, Spinner, cn } from "../components/ui";
 
 type WorkspaceTab = "cube" | "editor";
 
@@ -62,6 +71,7 @@ const KEY_TO_FACE: Record<string, MoveFace> = {
 
 export default function SolverPage() {
   const workspace = useCubeWorkspace();
+  const { theme } = useTheme();
   const { state, actions, busy, scrambling, facelets, elapsedMs, canUndo, canRedo } = workspace;
   const { push } = useToast();
   const apiHealth = useApiHealth();
@@ -79,7 +89,51 @@ export default function SolverPage() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [autoRotate, setAutoRotate] = useState(false);
   const [viewReset, setViewReset] = useState(0);
+  const [viewCommand, setViewCommand] = useState<ViewCommand | null>(null);
+  const viewCommandId = useRef(0);
   const solveRequest = useRef(0);
+
+  const orbitView = useCallback((dx: number, dy: number) => {
+    viewCommandId.current += 1;
+    setViewCommand({ id: viewCommandId.current, kind: "orbit", dx, dy });
+  }, []);
+
+  const zoomView = useCallback((factor: number) => {
+    viewCommandId.current += 1;
+    setViewCommand({ id: viewCommandId.current, kind: "zoom", factor });
+  }, []);
+
+  const handleViewKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      const step = 0.18;
+      switch (event.key) {
+        case "ArrowLeft":
+          orbitView(-step, 0);
+          break;
+        case "ArrowRight":
+          orbitView(step, 0);
+          break;
+        case "ArrowUp":
+          orbitView(0, -step);
+          break;
+        case "ArrowDown":
+          orbitView(0, step);
+          break;
+        case "+":
+        case "=":
+          zoomView(0.82);
+          break;
+        case "-":
+        case "_":
+          zoomView(1.2);
+          break;
+        default:
+          return;
+      }
+      event.preventDefault();
+    },
+    [orbitView, zoomView],
+  );
 
   useEffect(() => {
     setLastScramble(state.scramble);
@@ -145,17 +199,14 @@ export default function SolverPage() {
         apiNodes: response.nodes,
         normalized: response.normalized,
       });
+      // Start playback immediately so the cube itself shows the verified solution.
+      actions.solutionPlay();
       setTab("cube");
       push(
-        `Solved in ${response.moveCount} moves in ${formatSeconds(response.elapsedMs)}.`,
+        `Solved in ${response.moveCount} moves in ${formatSeconds(response.elapsedMs)}. Playing back now.`,
         "success",
         "Solution ready",
       );
-      window.setTimeout(() => {
-        document
-          .getElementById("solution-panel")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 90);
     } catch (caught) {
       if (solveRequest.current !== requestId) return;
       const failure =
@@ -288,23 +339,36 @@ export default function SolverPage() {
   }, [actions, scannerOpen, shortcutsOpen, state.solution]);
 
   const solved = state.solved && !busy;
-  const statusLabel = scrambling ? "Scrambling" : busy ? "Animating" : solved ? "Solved" : "Scrambled";
+  const statusLabel = solving
+    ? "Solving"
+    : scrambling
+      ? "Scrambling"
+      : busy
+        ? "Animating"
+        : state.solution?.playing
+          ? "Playing solution"
+          : solved
+            ? "Solved"
+            : "Scrambled";
   const solvedCount = validateFacelets(facelets).valid;
 
   return (
     <>
       <div className="page-shell pb-16 pt-8 sm:pt-10">
-        <header className="pb-6">
+        <header className="page-head">
           <div className="eyebrow">Solver studio</div>
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+          <div className="page-head__row">
             <div>
-              <h1 className="display-title">
-                The cube, <span className="gradient-text">solved properly.</span>
-              </h1>
+              <h1 className="display-title">Solve the cube. Watch every move.</h1>
               <p className="lead mt-3 max-w-2xl">
-                Scramble, solve and replay every move on a real 3D cube. The two-phase Kociemba
-                solver validates the sticker state and verifies its own solution before playback.
+                A real two-phase solver checks the sticker state, finds a solution, then turns the
+                3D cube through every verified move so you can see exactly what it did.
               </p>
+              <div className="process-line" aria-label="Solver workflow">
+                <span>Paint or scramble</span>
+                <span>Verify legality</span>
+                <span>Replay the solution</span>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Badge
@@ -335,10 +399,11 @@ export default function SolverPage() {
           </div>
         </header>
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
+        <div className="solver-layout">
           <div className="min-w-0 space-y-5">
-            <section className="surface" aria-labelledby="workspace-title">
-              <div className="panel-header flex-wrap items-center">
+            <div className="studio-grid">
+              <section className="workbench" aria-labelledby="workspace-title">
+              <div className="workbench__head">
                 <div>
                   <h2 className="panel-title" id="workspace-title">
                     <Box className="h-4 w-4 text-violet-300" />
@@ -352,7 +417,15 @@ export default function SolverPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge
-                    tone={solved ? "success" : scrambling || busy ? "warning" : "violet"}
+                    tone={
+                      solving || state.solution?.playing
+                        ? "cyan"
+                        : solved
+                          ? "success"
+                          : scrambling || busy
+                            ? "warning"
+                            : "violet"
+                    }
                   >
                     {statusLabel}
                   </Badge>
@@ -372,22 +445,46 @@ export default function SolverPage() {
                 </div>
               </div>
 
-              <div className="p-2.5 sm:p-3">
+              <div className="workbench__body">
                 {tab === "cube" ? (
-                  <div className="cube-stage h-[400px] sm:h-[480px] xl:h-[540px]">
+                  <div
+                    className={cn(
+                      "cube-stage h-[400px] sm:h-[480px] xl:h-[540px]",
+                      state.solution?.playing && "cube-stage--playing",
+                    )}
+                    role="group"
+                    aria-label="3D cube view. Use arrow keys to rotate and plus or minus to zoom."
+                    tabIndex={0}
+                    onKeyDown={handleViewKeyDown}
+                  >
                     <CubeCanvas
                       cube={state.cube}
                       animation={state.animation}
                       onAnimationEnd={(token) => actions.finish(token)}
-                      autoRotate={autoRotate}
+                      autoRotate={autoRotate || solving}
                       resetSignal={viewReset}
+                      viewCommand={viewCommand}
+                      light={theme === "light"}
                     />
+
+                    {solving ? (
+                      <div className="stage-solving" role="status">
+                        <Spinner className="h-5 w-5" />
+                        <span>Solving with two-phase search…</span>
+                      </div>
+                    ) : null}
 
                     <div className="cube-stage__top">
                       <div className="stage-pill">
                         <span
                           className="h-2 w-2 rounded-full"
-                          style={{ background: solved ? "#5ee0a0" : "#8b7cff" }}
+                          style={{
+                            background: solved
+                              ? "var(--green)"
+                              : solving || state.solution?.playing
+                                ? "var(--blue)"
+                                : "var(--accent)",
+                          }}
                           aria-hidden="true"
                         />
                         {statusLabel}
@@ -417,6 +514,24 @@ export default function SolverPage() {
                         <button
                           type="button"
                           className="stage-tool"
+                          aria-label="Zoom in on the cube"
+                          title="Zoom in"
+                          onClick={() => zoomView(0.82)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          className="stage-tool"
+                          aria-label="Zoom out from the cube"
+                          title="Zoom out"
+                          onClick={() => zoomView(1.2)}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          className="stage-tool"
                           aria-label="Scan a cube face with the camera"
                           title="Scan a face"
                           onClick={openScanner}
@@ -426,9 +541,16 @@ export default function SolverPage() {
                       </div>
                     </div>
 
+                    {state.animation && busy ? (
+                      <div className="stage-move" aria-hidden="true">
+                        <span>{FACE_NAMES[state.animation.move.face]} turn</span>
+                        <strong>{moveLabel(state.animation.move)}</strong>
+                      </div>
+                    ) : null}
+
                     <div className="cube-stage__bottom">
                       <div className="stage-pill hidden sm:inline-flex">
-                        Drag to orbit · scroll or pinch to zoom
+                        Drag or use arrow keys to orbit · scroll, pinch or +/− to zoom
                       </div>
                       <div className="stage-pill ml-auto">
                         <span
@@ -457,13 +579,13 @@ export default function SolverPage() {
                     ) : null}
                   </div>
                 ) : (
-                  <div role="tabpanel" aria-label="Sticker editor">
+                  <div>
                     <EditorPanel />
                   </div>
                 )}
               </div>
 
-              <div className="border-t border-white/[0.06] p-3">
+              <div className="workbench__dock">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={actions.undo} disabled={!canUndo}>
                     <Undo2 className="h-4 w-4" />
@@ -539,29 +661,30 @@ export default function SolverPage() {
                   </p>
                 )}
               </div>
-            </section>
+              </section>
 
-            <SolutionPanel
-              onSolve={() => void handleSolve()}
-              solving={solving}
-              solveDisabled={apiHealth.status === "offline" || busy || scrambling}
-            />
+              <SolutionPanel
+                onSolve={() => void handleSolve()}
+                solving={solving}
+                solveDisabled={apiHealth.status === "offline" || busy || scrambling}
+              />
+            </div>
 
-            <div className="grid gap-5 lg:grid-cols-2">
-              <section className="surface p-5">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-400/25 bg-cyan-400/10">
-                    <BookOpen className="h-4 w-4 text-cyan-300" />
+            <div className="insight-grid">
+              <section className="insight-card">
+                <div className="insight-card__head">
+                  <span className="insight-icon">
+                    <BookOpen className="h-4 w-4" />
                   </span>
                   <div>
-                    <h2 className="text-sm font-semibold text-white">Learn while you solve</h2>
+                    <h2 className="text-sm font-semibold">Learn while you solve</h2>
                     <p className="text-[0.7rem] text-muted">Notation, method and shortcuts</p>
                   </div>
                 </div>
                 <p className="mt-3 text-xs leading-relaxed text-muted">
-                  The solver gives you the shortest route it finds. Understanding the notation makes
-                  every move legible — and the beginner method explains why the cube comes back
-                  together.
+                  The solver finds a short route, not necessarily the absolute shortest. Reading the
+                  notation makes every move legible, and the beginner method explains why the cube
+                  comes back together.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Link to="/learn" className="btn btn-secondary btn-sm">
@@ -574,27 +697,27 @@ export default function SolverPage() {
                 </div>
               </section>
 
-              <section className="surface p-5">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-400/25 bg-emerald-400/10">
-                    <ShieldCheck className="h-4 w-4 text-emerald-300" />
+              <section className="insight-card">
+                <div className="insight-card__head">
+                  <span className="insight-icon">
+                    <ShieldCheck className="h-4 w-4" />
                   </span>
                   <div>
-                    <h2 className="text-sm font-semibold text-white">Verified, not hard-coded</h2>
+                    <h2 className="text-sm font-semibold">Verified, not hard-coded</h2>
                     <p className="text-[0.7rem] text-muted">Two-phase search · replay check</p>
                   </div>
                 </div>
                 <ul className="mt-3 space-y-1.5 text-xs leading-relaxed text-muted">
                   <li className="flex gap-2">
-                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-none text-emerald-300" />
+                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-none text-cyan-400" />
                     The API rejects impossible corners, edges and parity before searching.
                   </li>
                   <li className="flex gap-2">
-                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-none text-emerald-300" />
+                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-none text-cyan-400" />
                     Each sequence is replayed through the cube model and must end solved.
                   </li>
                   <li className="flex gap-2">
-                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-none text-emerald-300" />
+                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-none text-cyan-400" />
                     Camera frames are processed in memory and never written to disk.
                   </li>
                 </ul>

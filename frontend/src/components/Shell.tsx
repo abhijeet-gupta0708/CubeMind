@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ArrowRight, Camera, Menu, Sparkles, X } from "lucide-react";
+import { ArrowRight, Camera, Menu, Moon, Sparkles, Sun, X } from "lucide-react";
+import { useTheme } from "../lib/theme";
 import { CubeMark, Logo } from "./Logo";
 import { cn } from "./ui";
 
@@ -14,6 +15,8 @@ const NAV_ITEMS: ReadonlyArray<{ to: string; label: string; end?: boolean }> = [
 export function Shell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
+  const themeLabel = theme === "light" ? "Switch to dark graphics" : "Switch to light graphics";
 
   useEffect(() => {
     setMenuOpen(false);
@@ -26,7 +29,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="noise" aria-hidden="true" />
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-violet-500 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-accent-ink"
       >
         Skip to content
       </a>
@@ -45,6 +48,16 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label={themeLabel}
+              aria-pressed={theme === "light"}
+              title={themeLabel}
+              onClick={toggleTheme}
+            >
+              {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </button>
             <Link
               to={onSolver ? "/?scan=1" : "/"}
               className="btn btn-primary hidden sm:inline-flex"
@@ -74,40 +87,58 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        {menuOpen ? (
-          <div id="mobile-navigation" className="mobile-nav md:hidden">
-            <nav className="page-shell flex flex-col gap-1 py-3" aria-label="Mobile">
-              {NAV_ITEMS.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex min-h-12 items-center justify-between rounded-xl px-3.5 text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-white/[0.07] text-white"
-                        : "text-muted hover:bg-white/[0.04] hover:text-white",
-                    )
-                  }
-                >
-                  {item.label}
-                  <ArrowRight className="h-4 w-4 opacity-40" />
-                </NavLink>
-              ))}
-              <Link
-                to={onSolver ? "/?scan=1" : "/"}
-                className="btn btn-primary mt-2 w-full"
+        <div id="mobile-navigation" className="mobile-nav md:hidden" hidden={!menuOpen}>
+          <nav className="page-shell flex flex-col gap-1 py-3" aria-label="Mobile">
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  cn(
+                    "flex min-h-12 items-center justify-between rounded-xl px-3.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-white/[0.07] text-white"
+                      : "text-muted hover:bg-white/[0.04] hover:text-white",
+                  )
+                }
               >
-                {onSolver ? <Camera className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-                {onSolver ? "Scan a cube" : "Open solver"}
-              </Link>
-            </nav>
-          </div>
-        ) : null}
+                {item.label}
+                <ArrowRight className="h-4 w-4 opacity-40" />
+              </NavLink>
+            ))}
+            <button
+              type="button"
+              className="btn btn-secondary mt-2 w-full"
+              aria-label={themeLabel}
+              aria-pressed={theme === "light"}
+              onClick={toggleTheme}
+            >
+              {theme === "light" ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
+              {theme === "light" ? "Dark graphics" : "Light graphics"}
+            </button>
+            <Link to={onSolver ? "/?scan=1" : "/"} className="btn btn-primary w-full">
+              {onSolver ? <Camera className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+              {onSolver ? "Scan a cube" : "Open solver"}
+            </Link>
+          </nav>
+        </div>
+
+        <div className="cube-ribbon" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
       </header>
 
-      <main id="main-content">{children}</main>
+      <main id="main-content" tabIndex={-1}>{children}</main>
 
       <footer className="mt-20 border-t border-white/[0.06]">
         <div className="page-shell py-12">
@@ -119,15 +150,13 @@ export function Shell({ children }: { children: ReactNode }) {
                 playback, a sticker editor and camera scanning.
               </p>
               <div className="mt-4 flex items-center gap-2">
-                <span className="status-dot status-dot--ok" />
-                <span className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-dim">
-                  No account · no tracking
-                </span>
+                <span className="status-dot" />
+                <span className="text-[0.72rem] text-muted-dim">No account, no tracking</span>
               </div>
             </div>
 
             <div>
-              <h2 className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted-dim">
+              <h2 className="text-[0.72rem] font-semibold text-muted-dim">
                 Product
               </h2>
               <ul className="mt-3 space-y-1">
@@ -145,7 +174,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </div>
 
             <div>
-              <h2 className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted-dim">
+              <h2 className="text-[0.72rem] font-semibold text-muted-dim">
                 Learn
               </h2>
               <ul className="mt-3 space-y-1">

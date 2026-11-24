@@ -140,7 +140,7 @@ export function EditorPanel() {
         <div className="surface-soft p-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-semibold text-white">Paint colour</h3>
-            <span className="font-mono text-[0.62rem] uppercase tracking-[0.1em] text-muted-dim">
+            <span className="meta-label">
               {FACE_NAMES[selectedColor]} {selectedColor}
             </span>
           </div>

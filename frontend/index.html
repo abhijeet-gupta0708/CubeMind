@@ -4,12 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#101114" />
+    <meta name="theme-color" content="#0c1210" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      try {
+        if (localStorage.getItem("cubemind:theme") === "light") {
+          document.documentElement.dataset.theme = "light";
+          document.querySelector('meta[name="theme-color"]').content = "#eef0e9";
+        }
+      } catch (_) {}
+    </script>
     <meta
       name="description"
-      content="CubeMind is an interactive 3D Rubik's Cube studio with a real two-phase Kociemba solver, step-by-step playback, a sticker editor and camera scanning."
+      content="CubeMind is a 3D Rubik's Cube workbench with a real two-phase Kociemba solver, verified move-by-move playback, a sticker editor and camera scanning."
     />
-    <title>CubeMind — Solve smarter. Move faster.</title>
+    <title>CubeMind — Verified 3D cube solver</title>
   </head>
   <body>
     <div id="root"></div>

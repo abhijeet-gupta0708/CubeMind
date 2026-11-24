@@ -51,6 +51,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       counter.current += 1;
       const id = counter.current;
       setToasts((current) => [...current.slice(-3), { id, message, tone, title }]);
+      // Errors carry information the user may need to act on, so they stay
+      // until explicitly dismissed.
+      if (tone === "error") return;
       const timer = window.setTimeout(() => {
         timers.current.delete(id);
         setToasts((current) => current.filter((toast) => toast.id !== id));

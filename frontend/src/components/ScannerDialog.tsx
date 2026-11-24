@@ -293,7 +293,7 @@ export function ScannerDialog({
                 ) : (
                   <>
                     <CameraOff className="h-6 w-6 text-muted" />
-                    <p className="text-xs text-muted">
+                    <p className="text-xs text-muted" role="alert">
                       {cameraError ??
                         "The camera is not running. Upload a photo instead of capturing one."}
                     </p>
@@ -392,7 +392,7 @@ export function ScannerDialog({
         <div className="space-y-3">
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-dim">
+              <span className="meta-label">
                 Which face is this?
               </span>
               <Badge tone={result?.quadDetected ? "success" : "default"}>
@@ -446,7 +446,7 @@ export function ScannerDialog({
 
             <div className="mt-3">
               <div className="mb-1.5 flex items-center justify-between">
-                <span className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-dim">
+                <span className="meta-label">
                   Correct a sticker
                 </span>
                 <span className="font-mono text-[0.6rem] text-muted-dim">
@@ -517,11 +517,13 @@ export function ScannerDialog({
             </Callout>
           ) : null}
 
-          {scanError ? (
-            <Callout tone="danger" icon={<TriangleAlert className="h-4 w-4" />}>
-              {scanError}
-            </Callout>
-          ) : null}
+          <div role="alert" aria-atomic="true">
+            {scanError ? (
+              <Callout tone="danger" icon={<TriangleAlert className="h-4 w-4" />}>
+                {scanError}
+              </Callout>
+            ) : null}
+          </div>
 
           <Button
             variant="primary"

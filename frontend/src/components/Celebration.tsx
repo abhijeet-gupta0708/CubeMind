@@ -4,7 +4,7 @@ import { Check, Sparkles, X } from "lucide-react";
 import { formatDuration } from "../lib/format";
 import { Button } from "./ui";
 
-const CONFETTI_COLORS = ["#8b7cff", "#57d6e8", "#5ee0a0", "#f5c451", "#ff7b7b", "#ffffff"];
+const CONFETTI_COLORS = ["#f5cc45", "#61b7e8", "#5bcc8e", "#ef8c35", "#e85443", "#f3f3ec"];
 
 interface ConfettiPiece {
   left: number;
@@ -44,7 +44,7 @@ export function Celebration({
   );
 
   return (
-    <div className="celebration" role="status" aria-live="assertive">
+    <div className="celebration" role="status">
       <div aria-hidden="true">
         {pieces.map((piece, index) => (
           <span
@@ -72,14 +72,12 @@ export function Celebration({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: "spring", stiffness: 240, damping: 20 }}
       >
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-400/40 bg-violet-500/15 shadow-[0_0_42px_-12px_rgba(139,124,255,0.9)]">
-          <Check className="h-7 w-7 text-violet-200" strokeWidth={2.5} />
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-accent bg-accent/10">
+          <Check className="h-7 w-7 text-accent" strokeWidth={2.5} />
         </div>
-        <div className="mt-4 flex items-center justify-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-          <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-cyan-300">
-            Verified solved state
-          </span>
+        <div className="meta-label mt-4 flex items-center justify-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>Verified solved state</span>
         </div>
         <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
           Cube solved successfully!
@@ -90,7 +88,7 @@ export function Celebration({
         <div className="mt-4 flex items-center justify-center gap-2">
           {typeof elapsedMs === "number" && elapsedMs > 0 ? (
             <div className="surface-soft px-3 py-2">
-              <div className="font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-dim">
+              <div className="meta-label">
                 Time
               </div>
               <div className="mono mt-0.5 text-lg">{formatDuration(elapsedMs)}</div>
@@ -98,7 +96,7 @@ export function Celebration({
           ) : null}
           {typeof moveCount === "number" && moveCount > 0 ? (
             <div className="surface-soft px-3 py-2">
-              <div className="font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-dim">
+              <div className="meta-label">
                 Moves
               </div>
               <div className="mono mt-0.5 text-lg">{moveCount}</div>
@@ -109,7 +107,7 @@ export function Celebration({
           {onScramble ? (
             <Button variant="primary" onClick={onScramble}>
               <Sparkles className="h-4 w-4" />
-              New scramble
+              Generate new scramble
             </Button>
           ) : null}
           <Button variant="secondary" onClick={onDismiss}>

@@ -121,13 +121,15 @@ function initialState(): WorkspaceState {
   };
 }
 
+// Educational turns include a short camera-focus phase before the layer moves.
+// Scrambles stay quick because they are not meant to be followed move by move.
 const DURATION: Record<MoveSource, number> = {
-  user: 190,
-  solution: 230,
-  "solution-back": 200,
+  user: 340,
+  solution: 420,
+  "solution-back": 340,
   scramble: 82,
-  undo: 170,
-  redo: 170,
+  undo: 300,
+  redo: 300,
 };
 
 function beginNext(state: WorkspaceState): WorkspaceState {

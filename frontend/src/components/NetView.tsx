@@ -32,7 +32,15 @@ export function NetView({
   ariaLabel = "Cube net showing all six faces",
 }: NetViewProps) {
   return (
-    <div className={cn("net-scroll scroll-thin", className)}>
+    <div
+      className={cn("net-scroll scroll-thin", className)}
+      role="region"
+      aria-label="Cube net; scroll horizontally to see all six faces"
+      tabIndex={0}
+    >
+      <p className="mb-2 text-[0.68rem] text-muted sm:hidden">
+        Scroll sideways to see all six faces
+      </p>
       <div className="cube-net" role="group" aria-label={ariaLabel}>
         {SLOT_ORDER.map((face) => {
           const faceIndex = FACE_INDEX[face];
@@ -124,26 +132,31 @@ export function MiniFace({
             key={index}
             type="button"
             className="scan-cell"
-            style={{ "--cell-color": color ? FACE_COLORS[color] : "#262a31" } as CSSProperties}
+            style={
+              {
+                "--cell-color": color ? FACE_COLORS[color] : "#262a31",
+                "--confidence-color":
+                  confidence === undefined
+                    ? "transparent"
+                    : confidence >= 0.7
+                      ? "var(--success)"
+                      : confidence >= 0.45
+                        ? "var(--warning)"
+                        : "var(--danger)",
+              } as CSSProperties
+            }
             aria-label={`${FACE_NAMES[face]} row ${Math.floor(index / 3) + 1}, column ${
               (index % 3) + 1
-            }: ${color ? FACE_NAMES[color] : "unknown"}`}
+            }: ${color ? FACE_NAMES[color] : "unknown"}${
+              confidence === undefined ? "" : `, confidence ${Math.round(confidence * 100)} percent`
+            }`}
             aria-pressed={selected === index}
             onClick={() => onSelect?.(index)}
           >
             {confidence !== undefined ? (
-              <span
-                className="scan-cell__confidence"
-                style={{
-                  background:
-                    confidence >= 0.7
-                      ? "#5ee0a0"
-                      : confidence >= 0.45
-                        ? "#f5c451"
-                        : "#ff7b7b",
-                }}
-                title={`Confidence ${(confidence * 100).toFixed(0)}%`}
-              />
+              <span className="scan-cell__confidence" aria-hidden="true">
+                {Math.round(confidence * 100)}
+              </span>
             ) : null}
           </button>
         );
